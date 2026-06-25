@@ -26,24 +26,24 @@ export function ProductCard({
   }
 
   return (
-    <article className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-card">
+    <article className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-card sm:rounded-3xl">
       <button onClick={onOpen} className="block w-full text-left" type="button">
-        <div className="relative h-36 overflow-hidden bg-slate-100 sm:h-44">
+        <div className="relative h-28 overflow-hidden bg-slate-100 sm:h-44">
           <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
-          <div className="absolute left-3 top-3">
+          <div className="absolute left-2 top-2 sm:left-3 sm:top-3">
             <StatusBadge status={product.available ? "Disponible" : "No disponible"} />
           </div>
         </div>
       </button>
-      <div className="grid gap-3 p-4">
+      <div className="grid gap-2.5 p-3 sm:gap-3 sm:p-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-wide text-brand-700">{product.category}</p>
-          <h3 className="mt-1 line-clamp-1 text-base font-black text-ink">{product.name}</h3>
-          <p className="mt-1 text-lg font-black text-ink">{money(product.price)}</p>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-brand-700 sm:text-xs">{product.category}</p>
+          <h3 className="mt-0.5 line-clamp-1 text-sm font-black text-ink sm:mt-1 sm:text-base">{product.name}</h3>
+          <p className="mt-0.5 text-base font-black text-ink sm:mt-1 sm:text-lg">{money(product.price)}</p>
         </div>
         {!admin && (
-          <Button disabled={!product.available} onClick={handleAdd} className="w-full">
-            {added ? <Check size={18} /> : <Plus size={18} />}
+          <Button disabled={!product.available} onClick={handleAdd} className="min-h-10 w-full rounded-xl px-2 text-xs sm:min-h-11 sm:rounded-2xl sm:text-sm">
+            {added ? <Check size={16} /> : <Plus size={16} />}
             {added ? "Agregado" : "Agregar"}
           </Button>
         )}

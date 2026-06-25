@@ -277,7 +277,7 @@ function ClientShell(props: {
   }
 
   return (
-    <div className="grid gap-5">
+    <div className="grid gap-4 sm:gap-5">
       <Header
         business={props.business}
         setArea={props.setArea}
@@ -286,11 +286,11 @@ function ClientShell(props: {
         cartCount={props.cartItems.reduce((sum, item) => sum + item.quantity, 0)}
       />
       {props.view === "home" && (
-        <section className="grid gap-5">
+        <section className="grid gap-4 sm:gap-5">
           <Hero business={props.business} onCatalog={() => props.setView("catalog")} />
           <CategoryFilter categories={categories} active={props.category} onChange={(category) => { props.setCategory(category); props.setView("catalog"); }} />
           <SectionTitle title="Destacados de hoy" action="Ver catálogo" onAction={() => props.setView("catalog")} />
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-4">
             {featured.map((product) => (
               <ProductCard
                 key={product.id}
@@ -343,21 +343,21 @@ function Header({
   cartCount: number;
 }) {
   return (
-    <header className="flex items-center gap-3 rounded-[2rem] border border-slate-100 bg-white p-3 shadow-card">
-      <button type="button" onClick={onHome} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+    <header className="flex items-center gap-2 rounded-3xl border border-slate-100 bg-white p-2.5 shadow-card sm:gap-3 sm:rounded-[2rem] sm:p-3">
+      <button type="button" onClick={onHome} className="flex min-w-0 flex-1 items-center gap-2.5 text-left sm:gap-3">
         {business.logo ? (
-          <img src={business.logo} alt={business.name} className="h-12 w-12 rounded-2xl object-cover" />
+          <img src={business.logo} alt={business.name} className="h-10 w-10 rounded-2xl object-cover sm:h-12 sm:w-12" />
         ) : (
-        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-brand-600 text-lg font-black text-white">
+        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-brand-600 text-base font-black text-white sm:h-12 sm:w-12 sm:text-lg">
           {(business.name || "CA").slice(0, 2).toUpperCase()}
         </div>
         )}
         <div className="min-w-0 flex-1">
-          <p className="truncate text-lg font-black text-ink">{business.name}</p>
-          <p className="truncate text-sm font-medium text-slate-500">{business.hours}</p>
+          <p className="truncate text-base font-black text-ink sm:text-lg">{business.name}</p>
+          <p className="truncate text-xs font-medium text-slate-500 sm:text-sm">{business.hours}</p>
         </div>
       </button>
-      <Button variant="orange" className="relative px-3 sm:px-4" onClick={onCart}>
+      <Button variant="orange" className="relative min-h-10 rounded-2xl px-3 sm:min-h-11 sm:px-4" onClick={onCart}>
         <ShoppingCart size={18} />
         <span className="hidden sm:inline">Carrito</span>
         {cartCount > 0 ? (
@@ -376,23 +376,23 @@ function Header({
 
 function Hero({ business, onCatalog }: { business: BusinessSettings; onCatalog: () => void }) {
   return (
-    <section className="overflow-hidden rounded-[2.2rem] bg-ink text-white shadow-soft">
+    <section className="overflow-hidden rounded-3xl bg-ink text-white shadow-soft sm:rounded-[2.2rem]">
       <div className="grid md:grid-cols-[1.1fr_0.9fr]">
-        <div className="p-6 sm:p-8">
+        <div className="p-5 sm:p-8">
           <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-brand-100">Catálogo abierto</span>
-          <h1 className="mt-4 text-3xl font-black tracking-tight sm:text-5xl">Pide tus favoritos sin esperar respuesta.</h1>
-          <p className="mt-3 max-w-xl text-base font-medium text-slate-200">
+          <h1 className="mt-3 text-2xl font-black tracking-tight sm:mt-4 sm:text-5xl">Pide tus favoritos sin esperar respuesta.</h1>
+          <p className="mt-2 max-w-xl text-sm font-medium leading-6 text-slate-200 sm:mt-3 sm:text-base">
             Explora el menú de {business.name}, arma tu pedido y envíalo listo por WhatsApp.
           </p>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <Button onClick={onCatalog}>Ver catálogo</Button>
+          <div className="mt-5 flex flex-col gap-2.5 sm:mt-6 sm:flex-row sm:gap-3">
+            <Button className="w-full sm:w-auto" onClick={onCatalog}>Ver catálogo</Button>
             <a href={`https://wa.me/${business.whatsapp}`} target="_blank" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-[#25D366] px-4 py-2.5 text-sm font-semibold text-white">
               <MessageCircle size={18} />
               WhatsApp
             </a>
           </div>
         </div>
-        <div className="min-h-64 bg-[url('https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=1200&q=80')] bg-cover bg-center" />
+        <div className="min-h-40 bg-[url('https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=1200&q=80')] bg-cover bg-center sm:min-h-64" />
       </div>
     </section>
   );
@@ -400,18 +400,18 @@ function Hero({ business, onCatalog }: { business: BusinessSettings; onCatalog: 
 
 function CatalogView(props: Parameters<typeof ClientShell>[0]) {
   return (
-    <section className="grid gap-4">
+    <section className="grid gap-3.5 sm:gap-4">
       <div className="grid gap-3">
-        <Button variant="secondary" className="w-fit" onClick={() => props.setView("home")}>
+        <Button variant="ghost" className="w-fit px-1" onClick={() => props.setView("home")}>
           <ArrowLeft size={17} />
           Volver al inicio
         </Button>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="text-3xl font-black text-ink">Catálogo</h2>
+            <h2 className="text-2xl font-black text-ink sm:text-3xl">Catálogo</h2>
             <p className="text-sm font-medium text-slate-500">Busca por nombre o filtra por categoría.</p>
           </div>
-          <Button variant="orange" onClick={() => props.setView("cart")}>
+          <Button variant="orange" className="hidden sm:inline-flex" onClick={() => props.setView("cart")}>
             <ShoppingCart size={17} />
             Ver carrito
           </Button>
@@ -422,7 +422,7 @@ function CatalogView(props: Parameters<typeof ClientShell>[0]) {
         <input value={props.query} onChange={(event) => props.setQuery(event.target.value)} placeholder="Buscar productos" className="h-12 min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none" />
       </div>
       <CategoryFilter categories={categories} active={props.category} onChange={props.setCategory} />
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 xl:grid-cols-4">
         {props.visibleProducts.map((product) => (
           <ProductCard
             key={product.id}
@@ -896,7 +896,7 @@ function QuickAction({ label, icon, onClick }: { label: string; icon: React.Reac
 
 function FloatingWhatsApp({ phone }: { phone: string }) {
   return (
-    <a href={`https://wa.me/${phone}`} target="_blank" className="fixed bottom-28 right-5 z-30 grid h-14 w-14 place-items-center rounded-full bg-[#25D366] text-white shadow-soft lg:bottom-8">
+    <a href={`https://wa.me/${phone}`} target="_blank" className="fixed bottom-8 right-5 z-30 hidden h-14 w-14 place-items-center rounded-full bg-[#25D366] text-white shadow-soft lg:grid">
       <MessageCircle size={26} />
     </a>
   );
@@ -907,7 +907,7 @@ function FloatingCart({ count, total, onClick }: { count: number; total: number;
     <button
       type="button"
       onClick={onClick}
-      className="fixed bottom-44 right-5 z-30 inline-flex min-h-14 items-center gap-3 rounded-full bg-orangeSoft-500 px-4 py-3 text-sm font-black text-white shadow-soft transition hover:bg-orangeSoft-600 lg:bottom-24"
+      className="fixed bottom-24 right-5 z-30 hidden min-h-14 items-center gap-3 rounded-full bg-orangeSoft-500 px-4 py-3 text-sm font-black text-white shadow-soft transition hover:bg-orangeSoft-600 lg:inline-flex"
     >
       <span className="relative grid h-8 w-8 place-items-center rounded-full bg-white/20">
         <ShoppingCart size={19} />
