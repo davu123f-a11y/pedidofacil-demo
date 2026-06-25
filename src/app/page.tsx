@@ -117,6 +117,11 @@ export default function PedidoFacilApp() {
   }
 
   function saveOrder(customer: Customer) {
+    if (!cartItems.length) {
+      setClientView("cart");
+      return;
+    }
+
     const order: Order = {
       id: `PF-${Date.now().toString().slice(-6)}`,
       customer,
@@ -146,7 +151,12 @@ export default function PedidoFacilApp() {
   }
 
   function deleteProduct(productId: string) {
+    const product = products.find((item) => item.id === productId);
+    const confirmed = window.confirm(`¿Eliminar ${product?.name ?? "este producto"}? Esta acción no se puede deshacer.`);
+    if (!confirmed) return;
+
     setProducts((current) => current.filter((product) => product.id !== productId));
+    setCart((current) => current.filter((item) => item.productId !== productId));
   }
 
   function updateOrderStatus(order: Order, status: OrderStatus) {
@@ -157,12 +167,15 @@ export default function PedidoFacilApp() {
 
   function downloadCsv() {
     const rows = [
-      ["id", "cliente", "telefono", "direccion", "estado", "total", "fecha"],
+      ["id", "cliente", "telefono", "entrega", "direccion", "productos", "referencias_o_notas", "estado", "total", "fecha"],
       ...orders.map((order) => [
         order.id,
         order.customer.name,
         order.customer.phone,
+        order.customer.deliveryMethod,
         order.customer.address,
+        order.items.map((item) => `${item.quantity}x ${item.name}`).join(" | "),
+        order.customer.note,
         order.status,
         order.total.toString(),
         order.createdAt,
@@ -288,6 +301,7 @@ function ClientShell(props: {
       {props.view === "home" && (
         <section className="grid gap-4 sm:gap-5">
           <Hero business={props.business} onCatalog={() => props.setView("catalog")} />
+          <TrustStrip />
           <CategoryFilter categories={categories} active={props.category} onChange={(category) => { props.setCategory(category); props.setView("catalog"); }} />
           <SectionTitle title="Destacados de hoy" action="Ver catálogo" onAction={() => props.setView("catalog")} />
           <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-4">
@@ -422,35 +436,52 @@ function CatalogView(props: Parameters<typeof ClientShell>[0]) {
         <input value={props.query} onChange={(event) => props.setQuery(event.target.value)} placeholder="Buscar productos" className="h-12 min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none" />
       </div>
       <CategoryFilter categories={categories} active={props.category} onChange={props.setCategory} />
-      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 xl:grid-cols-4">
-        {props.visibleProducts.map((product) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            onOpen={() => { props.setSelectedProduct(product); props.setView("detail"); }}
-            onAdd={() => props.addToCart(product)}
-          />
-        ))}
-      </div>
+      {props.visibleProducts.length ? (
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 xl:grid-cols-4">
+          {props.visibleProducts.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              onOpen={() => { props.setSelectedProduct(product); props.setView("detail"); }}
+              onAdd={() => props.addToCart(product)}
+            />
+          ))}
+        </div>
+      ) : (
+        <EmptyState title="No encontramos productos" copy="Prueba otra búsqueda o cambia de categoría para seguir explorando el catálogo." action="Limpiar búsqueda" onAction={() => { props.setQuery(""); props.setCategory("Todos"); }} />
+      )}
     </section>
+  );
+}
+
+function TrustStrip() {
+  const items = ["Pedido por WhatsApp", "Sin comisiones", "Confirmación rápida"];
+  return (
+    <div className="grid grid-cols-3 gap-2 rounded-3xl border border-slate-100 bg-white p-2 shadow-card">
+      {items.map((item) => (
+        <div key={item} className="rounded-2xl bg-slate-50 px-2 py-3 text-center text-[11px] font-black text-slate-600 sm:text-sm">
+          {item}
+        </div>
+      ))}
+    </div>
   );
 }
 
 function ProductDetailView({ product, onBack, onAdd }: { product: Product; onBack: () => void; onAdd: (quantity: number) => void }) {
   const [quantity, setQuantity] = useState(1);
   return (
-    <section className="overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-card">
+    <section className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-card sm:rounded-[2rem]">
       <button type="button" onClick={onBack} className="m-4 inline-flex items-center gap-2 rounded-full bg-slate-50 px-3 py-2 text-sm font-bold text-slate-600">
         <ArrowLeft size={17} />
         Volver
       </button>
       <div className="grid gap-5 p-4 pt-0 md:grid-cols-2 md:p-6">
-        <img src={product.image} alt={product.name} className="h-80 w-full rounded-[1.6rem] object-cover" />
+        <img src={product.image} alt={product.name} className="h-64 w-full rounded-[1.4rem] object-cover sm:h-80 sm:rounded-[1.6rem]" />
         <div className="flex flex-col justify-center">
           <StatusBadge status={product.available ? "Disponible" : "No disponible"} />
-          <h2 className="mt-3 text-4xl font-black text-ink">{product.name}</h2>
-          <p className="mt-2 text-3xl font-black text-brand-700">{money(product.price)}</p>
-          <p className="mt-4 text-base font-medium leading-7 text-slate-600">{product.description}</p>
+          <h2 className="mt-3 text-3xl font-black text-ink sm:text-4xl">{product.name}</h2>
+          <p className="mt-2 text-2xl font-black text-brand-700 sm:text-3xl">{money(product.price)}</p>
+          <p className="mt-4 text-sm font-medium leading-6 text-slate-600 sm:text-base sm:leading-7">{product.description}</p>
           <div className="mt-6 flex items-center gap-3">
             <Button variant="secondary" onClick={() => setQuantity(Math.max(1, quantity - 1))}>-</Button>
             <span className="grid h-12 w-16 place-items-center rounded-2xl bg-slate-50 text-lg font-black">{quantity}</span>
@@ -486,7 +517,10 @@ function CartView({
   return (
     <section className="grid gap-4 lg:grid-cols-[1fr_360px]">
       <div className="grid gap-3">
-        <h2 className="text-3xl font-black text-ink">Carrito</h2>
+        <div>
+          <h2 className="text-2xl font-black text-ink sm:text-3xl">Carrito</h2>
+          <p className="text-sm font-medium text-slate-500">Revisa cantidades antes de continuar.</p>
+        </div>
         {items.map((item) => (
           <CartItem
             key={item.id}
@@ -516,9 +550,19 @@ function CheckoutView({
 }) {
   const [customer, setCustomer] = useState<Customer>({ name: "", phone: "", address: "", deliveryMethod: "Delivery", note: "" });
 
+  if (!items.length) {
+    return <EmptyState title="No hay productos para confirmar" copy="Vuelve al catálogo y agrega al menos un producto antes de completar el pedido." action="Volver al carrito" onAction={onBack} />;
+  }
+
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    onSubmit(customer);
+    onSubmit({
+      ...customer,
+      name: customer.name.trim(),
+      phone: customer.phone.trim(),
+      address: customer.address.trim(),
+      note: customer.note.trim(),
+    });
   };
 
   return (
@@ -529,12 +573,12 @@ function CheckoutView({
           Volver al carrito
         </button>
         <div>
-          <h2 className="text-3xl font-black text-ink">Datos para tu pedido</h2>
-          <p className="text-sm font-medium text-slate-500">Completa esta información para enviar el pedido listo por WhatsApp.</p>
+          <h2 className="text-2xl font-black text-ink sm:text-3xl">Datos para tu pedido</h2>
+          <p className="text-sm font-medium text-slate-500">Los campos marcados con * son necesarios para que el negocio pueda confirmar tu pedido.</p>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
-          <Input required label="Nombre del cliente" value={customer.name} onChange={(name) => setCustomer({ ...customer, name })} />
-          <Input required label="Teléfono" value={customer.phone} onChange={(phone) => setCustomer({ ...customer, phone })} />
+          <Input required label="Nombre del cliente" value={customer.name} onChange={(name) => setCustomer({ ...customer, name })} placeholder="Ej. Ana Torres" />
+          <Input required label="Teléfono" type="tel" value={customer.phone} onChange={(phone) => setCustomer({ ...customer, phone })} placeholder="Ej. 987 654 321" />
         </div>
         <label className="grid gap-2 text-sm font-semibold text-slate-700">
           Método de entrega
@@ -543,8 +587,14 @@ function CheckoutView({
             <option>Recojo</option>
           </select>
         </label>
-        <Input label="Dirección" value={customer.address} onChange={(address) => setCustomer({ ...customer, address })} placeholder="Calle, número, referencia" />
-        <TextArea label="Nota adicional" value={customer.note} onChange={(note) => setCustomer({ ...customer, note })} placeholder="Ej. Sin azúcar, entregar en recepción..." />
+        <Input
+          required={customer.deliveryMethod === "Delivery"}
+          label={customer.deliveryMethod === "Delivery" ? "Dirección de entrega" : "Dirección (opcional)"}
+          value={customer.address}
+          onChange={(address) => setCustomer({ ...customer, address })}
+          placeholder={customer.deliveryMethod === "Delivery" ? "Calle, número, distrito" : "Opcional si deseas dejar una referencia"}
+        />
+        <TextArea label="Referencias o notas (opcional)" value={customer.note} onChange={(note) => setCustomer({ ...customer, note })} placeholder="Ej. Timbre malogrado, sin azúcar, entregar en recepción..." />
       </section>
       <section className="h-fit rounded-[2rem] border border-slate-100 bg-white p-5 shadow-card">
         <h3 className="text-xl font-black text-ink">Resumen</h3>
@@ -640,7 +690,9 @@ function AdminShell(props: {
               {props.orders.slice(0, 4).map((order) => (
                 <OrderCard key={order.id} order={order} onOpen={() => { props.setSelectedOrder(order); props.setView("orderDetail"); }} />
               ))}
-              {!props.orders.length ? <p className="text-sm font-medium text-slate-500">Cuando lleguen pedidos aparecerán aquí.</p> : null}
+              {!props.orders.length ? (
+                <EmptyState title="Aún no hay pedidos" copy="Haz un pedido de prueba desde el catálogo para ver cómo llega al panel." action="Ver catálogo" onAction={() => props.setArea("cliente")} />
+              ) : null}
             </div>
           </Panel>
         </section>
@@ -739,6 +791,9 @@ function ProductsAdmin(props: Parameters<typeof AdminShell>[0]) {
             </div>
           </article>
         ))}
+        {!list.length ? (
+          <EmptyState title="No hay productos en esta categoría" copy="Agrega un producto o cambia el filtro para revisar el catálogo completo." action="Agregar producto" onAction={() => { props.setEditingProduct(undefined); props.setView("productForm"); }} />
+        ) : null}
       </div>
     </section>
   );
@@ -782,7 +837,7 @@ function OrderDetailView({ order, onBack, onStatus }: { order: Order; onBack: ()
         <Panel title="Cliente">
           <p className="font-bold text-ink">{order.customer.phone}</p>
           <p className="mt-1 text-sm font-medium text-slate-500">{order.customer.deliveryMethod} · {order.customer.address || "Sin dirección"}</p>
-          <p className="mt-3 rounded-2xl bg-slate-50 p-3 text-sm font-medium text-slate-600">{order.customer.note || "Sin nota adicional"}</p>
+          <p className="mt-3 rounded-2xl bg-slate-50 p-3 text-sm font-medium text-slate-600">{order.customer.note || "Sin referencias o notas"}</p>
         </Panel>
         <Panel title="Productos">
           <div className="grid gap-2">
@@ -820,20 +875,26 @@ function ReportsView({ orders, totalSold, topProduct, downloadCsv }: { orders: O
         <DashboardCard title="Más vendido" value={topProduct} helper="Según unidades pedidas" icon={<Package size={21} />} />
       </div>
       <Panel title="Pedidos exportables">
-        <div className="grid gap-3">
-          {orders.slice(0, 8).map((order) => (
-            <div key={order.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-slate-50 p-3">
-              <span className="text-sm font-black text-ink">{order.id}</span>
-              <span className="text-sm font-semibold text-slate-600">{order.customer.name}</span>
-              <StatusBadge status={order.status} />
-              <span className="text-sm font-black text-ink">{money(order.total)}</span>
+        {orders.length ? (
+          <>
+            <div className="grid gap-3">
+              {orders.slice(0, 8).map((order) => (
+                <div key={order.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-slate-50 p-3">
+                  <span className="text-sm font-black text-ink">{order.id}</span>
+                  <span className="text-sm font-semibold text-slate-600">{order.customer.name}</span>
+                  <StatusBadge status={order.status} />
+                  <span className="text-sm font-black text-ink">{money(order.total)}</span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-        <Button className="mt-4" onClick={downloadCsv}>
-          <Download size={17} />
-          Descargar pedidos en CSV
-        </Button>
+            <Button className="mt-4" onClick={downloadCsv}>
+              <Download size={17} />
+              Descargar pedidos en CSV
+            </Button>
+          </>
+        ) : (
+          <EmptyState title="Todavía no hay datos para reportar" copy="Cuando recibas pedidos, aquí verás ventas, productos más vendidos y podrás descargar el CSV." />
+        )}
       </Panel>
     </section>
   );
@@ -850,7 +911,7 @@ function SectionTitle({ title, action, onAction }: { title: string; action?: str
 
 function SummaryCard({ total, button, onClick }: { total: number; button: string; onClick: () => void }) {
   return (
-    <aside className="h-fit rounded-[2rem] border border-slate-100 bg-white p-5 shadow-card">
+    <aside className="h-fit rounded-3xl border border-slate-100 bg-white p-5 shadow-card lg:sticky lg:top-6">
       <h3 className="text-xl font-black text-ink">Resumen</h3>
       <div className="mt-4 grid gap-3 text-sm font-semibold text-slate-600">
         <div className="flex justify-between"><span>Subtotal</span><span>{money(total)}</span></div>
@@ -858,7 +919,7 @@ function SummaryCard({ total, button, onClick }: { total: number; button: string
       </div>
       <div className="my-4 border-t border-slate-100" />
       <div className="flex justify-between text-lg font-black text-ink"><span>Total</span><span>{money(total)}</span></div>
-      <Button className="mt-5 w-full" onClick={onClick}>{button}</Button>
+      <Button disabled={total <= 0} className="mt-5 w-full" onClick={onClick}>{button}</Button>
     </aside>
   );
 }
@@ -896,7 +957,7 @@ function QuickAction({ label, icon, onClick }: { label: string; icon: React.Reac
 
 function FloatingWhatsApp({ phone }: { phone: string }) {
   return (
-    <a href={`https://wa.me/${phone}`} target="_blank" className="fixed bottom-8 right-5 z-30 hidden h-14 w-14 place-items-center rounded-full bg-[#25D366] text-white shadow-soft lg:grid">
+    <a href={buildWhatsappContactUrl(phone)} target="_blank" className="fixed bottom-8 right-5 z-30 hidden h-14 w-14 place-items-center rounded-full bg-[#25D366] text-white shadow-soft lg:grid" aria-label="Contactar por WhatsApp">
       <MessageCircle size={26} />
     </a>
   );
@@ -925,8 +986,13 @@ function FloatingCart({ count, total, onClick }: { count: number; total: number;
 function buildWhatsappUrl(phone: string, order: Order) {
   const cleanPhone = phone.replace(/\D/g, "");
   const products = order.items.map((item) => `- ${item.quantity}x ${item.name} - ${money(item.price * item.quantity)}`).join("\n");
-  const text = `Hola, quiero confirmar este pedido:\n\nPedido: ${order.id}\nNombre: ${order.customer.name}\nTeléfono: ${order.customer.phone}\nDirección: ${order.customer.address || "Recojo en tienda"}\nEntrega: ${order.customer.deliveryMethod}\n\nProductos:\n${products}\n\nTotal: ${money(order.total)}\nNota: ${order.customer.note || "Sin nota"}`;
+  const text = `Hola, quiero confirmar este pedido:\n\nPedido: ${order.id}\nNombre: ${order.customer.name}\nTeléfono: ${order.customer.phone}\nDirección: ${order.customer.address || "Recojo en tienda"}\nEntrega: ${order.customer.deliveryMethod}\n\nProductos:\n${products}\n\nTotal: ${money(order.total)}\nReferencias o notas: ${order.customer.note || "Sin referencias o notas"}`;
   return `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(text)}`;
+}
+
+function buildWhatsappContactUrl(phone: string) {
+  const cleanPhone = phone.replace(/\D/g, "");
+  return `https://api.whatsapp.com/send?phone=${cleanPhone}`;
 }
 
 function getTopProduct(orders: Order[]) {

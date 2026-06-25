@@ -48,15 +48,22 @@ type InputProps = {
   placeholder?: string;
   type?: string;
   required?: boolean;
+  min?: number;
+  step?: string;
 };
 
-export function Input({ label, value, onChange, placeholder, type = "text", required }: InputProps) {
+export function Input({ label, value, onChange, placeholder, type = "text", required, min, step }: InputProps) {
   return (
     <label className="grid gap-2 text-sm font-semibold text-slate-700">
-      {label}
+      <span>
+        {label}
+        {required ? <span className="ml-1 text-orangeSoft-600">*</span> : null}
+      </span>
       <input
         required={required}
         type={type}
+        min={min}
+        step={step}
         value={value}
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
@@ -110,7 +117,7 @@ export function StatusBadge({ status }: { status: OrderStatus | "Disponible" | "
   };
 
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${styles[status]}`}>
+    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold sm:text-xs ${styles[status]}`}>
       {icons[status]}
       {status}
     </span>

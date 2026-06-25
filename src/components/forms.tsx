@@ -14,6 +14,7 @@ export function ProductForm({
   onSave: (product: Product) => void;
   onCancel: () => void;
 }) {
+  const fallbackImage = "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?auto=format&fit=crop&w=900&q=80";
   const [product, setProduct] = useState<Product>(
     initial ?? {
       id: `p${Date.now()}`,
@@ -21,14 +22,29 @@ export function ProductForm({
       price: 0,
       category: "Café",
       description: "",
-      image: "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?auto=format&fit=crop&w=900&q=80",
+      image: fallbackImage,
       available: true,
     },
   );
+  const [error, setError] = useState("");
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    onSave({ ...product, price: Number(product.price) });
+    const cleanProduct = {
+      ...product,
+      name: product.name.trim(),
+      description: product.description.trim(),
+      image: product.image.trim() || fallbackImage,
+      price: Number(product.price),
+    };
+
+    if (!cleanProduct.name || cleanProduct.price <= 0) {
+      setError("Agrega un nombre y un precio mayor a S/ 0.00.");
+      return;
+    }
+
+    setError("");
+    onSave(cleanProduct);
   };
 
   return (
@@ -38,8 +54,8 @@ export function ProductForm({
         <h3 className="text-2xl font-black text-ink">{initial ? "Editar producto" : "Crear producto"}</h3>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
-        <Input required label="Nombre del producto" value={product.name} onChange={(name) => setProduct({ ...product, name })} />
-        <Input required label="Precio" type="number" value={product.price} onChange={(price) => setProduct({ ...product, price: Number(price) })} />
+        <Input required label="Nombre del producto" value={product.name} onChange={(name) => setProduct({ ...product, name })} placeholder="Ej. Cappuccino" />
+        <Input required label="Precio" type="number" min={1} step="0.1" value={product.price} onChange={(price) => setProduct({ ...product, price: Number(price) })} />
       </div>
       <label className="grid gap-2 text-sm font-semibold text-slate-700">
         Categoría
@@ -55,6 +71,7 @@ export function ProductForm({
       </label>
       <TextArea label="Descripción" value={product.description} onChange={(description) => setProduct({ ...product, description })} />
       <Input label="URL de imagen" value={product.image} onChange={(image) => setProduct({ ...product, image })} />
+      {error ? <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700">{error}</p> : null}
       <label className="flex items-center justify-between rounded-2xl bg-slate-50 p-4 text-sm font-bold text-slate-700">
         Producto disponible
         <input
@@ -126,8 +143,8 @@ export function BusinessSettingsForm({
         </div>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
-        <Input label="Nombre del negocio" value={draft.name} onChange={(name) => setDraft({ ...draft, name })} />
-        <Input label="Número de WhatsApp" value={draft.whatsapp} onChange={(whatsapp) => setDraft({ ...draft, whatsapp })} />
+        <Input required label="Nombre del negocio" value={draft.name} onChange={(name) => setDraft({ ...draft, name })} />
+        <Input required label="Número de WhatsApp" type="tel" value={draft.whatsapp} onChange={(whatsapp) => setDraft({ ...draft, whatsapp })} />
       </div>
       <Input label="Logo o URL de imagen" value={draft.logo} onChange={(logo) => setDraft({ ...draft, logo })} placeholder="Opcional" />
       <Input label="Horario" value={draft.hours} onChange={(hours) => setDraft({ ...draft, hours })} />

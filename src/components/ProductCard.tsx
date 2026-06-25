@@ -27,7 +27,7 @@ export function ProductCard({
 
   return (
     <article className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-card sm:rounded-3xl">
-      <button onClick={onOpen} className="block w-full text-left" type="button">
+      <button onClick={onOpen} className="block w-full text-left focus:outline-none focus:ring-4 focus:ring-brand-100" type="button" aria-label={`Ver detalle de ${product.name}`}>
         <div className="relative h-28 overflow-hidden bg-slate-100 sm:h-44">
           <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
           <div className="absolute left-2 top-2 sm:left-3 sm:top-3">
